@@ -36,7 +36,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
+        redirectTo: `https://carrier-dispatch-platform-dgh1iyn45-bjnexusai.vercel.app/api/auth/callback`,
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
