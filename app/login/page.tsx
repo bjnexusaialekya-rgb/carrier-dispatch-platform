@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { ROLE_LABELS, USER_ROLES, type UserRole } from "@/lib/types/roles";
 
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const supabase = createBrowserClient();
+  const router = useRouter();
+  const router = useRouter();
 
   async function handleEmailLogin() {
     setLoading(true);
