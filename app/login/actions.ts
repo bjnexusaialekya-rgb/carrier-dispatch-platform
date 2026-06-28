@@ -32,5 +32,5 @@ export async function loginWithEmailPassword(email: string, password: string) {
     return { error: error.message }
   }
 
-  redirect('/')
+  return { success: true }
 }
