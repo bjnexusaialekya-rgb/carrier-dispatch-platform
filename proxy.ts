@@ -5,7 +5,7 @@ import { ROLE_DASHBOARD_ROUTE } from "@/lib/types/roles";
 
 const PUBLIC_ROUTES = ["/login", "/api/auth/callback"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
