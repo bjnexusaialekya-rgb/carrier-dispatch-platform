@@ -6,7 +6,7 @@ import { ROLE_LABELS, USER_ROLES, type UserRole } from "@/lib/types/roles";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<UserRole>("professional_athlete");
+  const [role, setRole] = useState<UserRole>("shipper");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,10 +71,10 @@ export default function LoginPage() {
             marginBottom: "0.25rem",
           }}
         >
-          Bigfella Auto Express
+          Carrier Dispatch Portal
         </h1>
         <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "2rem" }}>
-          Sign in to manage your vehicle transport
+          Sign in to manage your shipments
         </p>
 
         {/* Role selector */}
