@@ -1,5 +1,7 @@
 "use client";
 
+import { loginWithEmailPassword } from "./actions";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
@@ -23,11 +25,9 @@ export default function LoginPage() {
     setMessage(null);
 
     if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setError(error.message);
-      } else {
-        window.location.href = "/";
+      const result = await loginWithEmailPassword(email, password);
+      if (result?.error) {
+        setError(result.error);
       }
     } else {
       const { error } = await supabase.auth.signUp({
