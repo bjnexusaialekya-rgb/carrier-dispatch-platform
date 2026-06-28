@@ -6,24 +6,42 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { ROLE_LABELS, USER_ROLES, type UserRole } from "@/lib/types/roles";
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("professional_athlete");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const supabase = createBrowserClient();
   const router = useRouter();
 
-  async function handleEmailLogin() {
+  async function handleSubmit() {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
+    setMessage(null);
+
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push("/");
+        router.refresh();
+      }
     } else {
-      router.push("/");
-      router.refresh();
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { role } },
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage("Account created! You can now sign in.");
+        setMode("signin");
+      }
     }
     setLoading(false);
   }
@@ -41,21 +59,35 @@ export default function LoginPage() {
   return (
     <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-surface-muted)", padding: "1.5rem" }}>
       <div style={{ width: "100%", maxWidth: "400px", background: "var(--color-surface)", borderRadius: "var(--radius-xl)", border: "1px solid var(--color-border)", padding: "2rem" }}>
+        
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "0.25rem" }}>
           Carrier Dispatch Portal
         </h1>
-        <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "2rem" }}>
-          Sign in to manage your shipments
+        <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
+          {mode === "signin" ? "Sign in to manage your shipments" : "Create your account"}
         </p>
 
-        <label style={{ display: "block", marginBottom: "1rem" }}>
-          <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text)", display: "block", marginBottom: "0.375rem" }}>I am a</span>
-          <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "0.875rem", background: "var(--color-surface)", color: "var(--color-text)" }}>
-            {USER_ROLES.filter((r) => r !== "admin").map((r) => (
-              <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-            ))}
-          </select>
-        </label>
+        {/* Sign in / Sign up toggle */}
+        <div style={{ display: "flex", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", marginBottom: "1.5rem", overflow: "hidden" }}>
+          <button onClick={() => { setMode("signin"); setError(null); setMessage(null); }} style={{ flex: 1, padding: "0.5rem", fontSize: "0.875rem", fontWeight: 500, border: "none", cursor: "pointer", background: mode === "signin" ? "var(--color-brand-600)" : "var(--color-surface)", color: mode === "signin" ? "#fff" : "var(--color-text-muted)" }}>
+            Sign In
+          </button>
+          <button onClick={() => { setMode("signup"); setError(null); setMessage(null); }} style={{ flex: 1, padding: "0.5rem", fontSize: "0.875rem", fontWeight: 500, border: "none", cursor: "pointer", background: mode === "signup" ? "var(--color-brand-600)" : "var(--color-surface)", color: mode === "signup" ? "#fff" : "var(--color-text-muted)" }}>
+            Sign Up
+          </button>
+        </div>
+
+        {/* Role selector — only on signup */}
+        {mode === "signup" && (
+          <label style={{ display: "block", marginBottom: "1rem" }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text)", display: "block", marginBottom: "0.375rem" }}>I am a</span>
+            <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "0.875rem", background: "var(--color-surface)", color: "var(--color-text)" }}>
+              {USER_ROLES.filter((r) => r !== "admin").map((r) => (
+                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label style={{ display: "block", marginBottom: "1rem" }}>
           <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text)", display: "block", marginBottom: "0.375rem" }}>Email address</span>
@@ -64,13 +96,14 @@ export default function LoginPage() {
 
         <label style={{ display: "block", marginBottom: "1.25rem" }}>
           <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text)", display: "block", marginBottom: "0.375rem" }}>Password</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && handleEmailLogin()} style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "0.875rem", background: "var(--color-surface)", color: "var(--color-text)" }} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && handleSubmit()} style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: "0.875rem", background: "var(--color-surface)", color: "var(--color-text)" }} />
         </label>
 
         {error && <p style={{ color: "var(--color-status-cancelled)", fontSize: "0.875rem", marginBottom: "1rem" }}>{error}</p>}
+        {message && <p style={{ color: "var(--color-status-delivered)", fontSize: "0.875rem", marginBottom: "1rem" }}>{message}</p>}
 
-        <button onClick={handleEmailLogin} disabled={loading || !email || !password} style={{ width: "100%", padding: "0.625rem 1rem", background: "var(--color-brand-600)", color: "#fff", border: "none", borderRadius: "var(--radius-md)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginBottom: "0.75rem", opacity: loading || !email || !password ? 0.6 : 1 }}>
-          {loading ? "Signing in…" : "Sign in"}
+        <button onClick={handleSubmit} disabled={loading || !email || !password} style={{ width: "100%", padding: "0.625rem 1rem", background: "var(--color-brand-600)", color: "#fff", border: "none", borderRadius: "var(--radius-md)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginBottom: "0.75rem", opacity: loading || !email || !password ? 0.6 : 1 }}>
+          {loading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
         </button>
 
         <div style={{ textAlign: "center", color: "var(--color-text-muted)", fontSize: "0.75rem", marginBottom: "0.75rem" }}>or</div>
@@ -85,6 +118,7 @@ export default function LoginPage() {
           </svg>
           Continue with Google
         </button>
+
       </div>
     </main>
   );
