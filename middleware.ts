@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import type { Database } from "@/lib/supabase/types";
 import { ROLE_DASHBOARD_ROUTE } from "@/lib/types/roles";
 
-const PUBLIC_ROUTES = ["/login", "/auth/callback"];
+const PUBLIC_ROUTES = ["/login", "/api/auth/callback"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
