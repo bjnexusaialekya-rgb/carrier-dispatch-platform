@@ -1,32 +1,32 @@
 /**
- * Six user role types for Carrier Dispatch Portal.
- * MVP scaffold — adjust after kickoff call.
+ * Six user role types for Bigfella Auto Express portal.
+ * Based on Job 3 post language — athletes, agents, managers, dealerships, retail customers.
  */
 export const USER_ROLES = [
-  'shipper',
-  'carrier',
-  'broker',
-  'fleet_manager',
-  'support_staff',
+  'professional_athlete',
+  'college_athlete',
+  'agent',
+  'team_staff',
+  'nil_collective',
   'admin',
 ] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const ROLE_DASHBOARD_ROUTE: Record<UserRole, string> = {
-  shipper: '/shipper',
-  carrier: '/carrier',
-  broker: '/agent',
-  fleet_manager: '/agent',
-  support_staff: '/agent',
+  professional_athlete: '/athlete',
+  college_athlete: '/athlete',
+  agent: '/agent',
+  team_staff: '/agent',
+  nil_collective: '/agent',
   admin: '/admin',
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  shipper: 'Shipper',
-  carrier: 'Carrier',
-  broker: 'Broker / Agent',
-  fleet_manager: 'Fleet Manager',
-  support_staff: 'Support Staff',
+  professional_athlete: 'Professional Athlete',
+  college_athlete: 'College / NCAA Athlete',
+  agent: 'Sports Agent / Agency',
+  team_staff: 'Team Operations / Staff',
+  nil_collective: 'NIL Collective',
   admin: 'Admin / Dispatcher',
 };
