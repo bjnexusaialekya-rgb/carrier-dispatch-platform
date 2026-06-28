@@ -1,0 +1,611 @@
+/**
+ * Hand-written Database type matching schema.sql.
+ * Satisfies @supabase/supabase-js 2.108.2 generic constraints:
+ *  - __InternalSupabase.PostgrestVersion required (fixes SchemaName → never)
+ *  - Tables: Row / Insert / Update / Relationships required per GenericTable
+ *  - Views: Row / Relationships required per GenericNonUpdatableView
+ *  - Functions: {} satisfies Record<string, GenericFunction>
+ *
+ * Replace this file with `supabase gen types typescript --local` once project
+ * is linked to a real Supabase instance.
+ */
+
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+// ─── Per-row types ────────────────────────────────────────────────────────────
+
+export type UserRole =
+  | "professional_athlete"
+  | "college_athlete"
+  | "agent"
+  | "team_staff"
+  | "nil_collective"
+  | "admin";
+
+export type BookingModel = "full_service" | "marketplace";
+export type ServiceTier = "standard" | "priority" | "white_glove";
+export type ShipmentStatus =
+  | "pending"
+  | "quoted"
+  | "accepted"
+  | "assigned"
+  | "picked_up"
+  | "in_transit"
+  | "delivered"
+  | "cancelled"
+  | "disputed";
+export type QuoteStatus = "pending" | "accepted" | "rejected" | "countered" | "expired";
+export type PaymentStatus = "pending" | "authorized" | "captured" | "refunded" | "failed";
+export type NotifChannel = "sms" | "email" | "push";
+export type AuditAction =
+  | "shipment_created"
+  | "quote_accepted"
+  | "carrier_assigned"
+  | "payment_captured"
+  | "dispute_opened"
+  | "dispute_resolved"
+  | "zelle_confirmed"
+  | "status_updated";
+
+// ─── Database type ────────────────────────────────────────────────────────────
+
+export interface Database {
+  /**
+   * Required by @supabase/supabase-js 2.108.2 and @supabase/postgrest-js.
+   * Without this key the SchemaName generic resolves to `never`, breaking
+   * every .from() / .select() call at the type level.
+   */
+  __InternalSupabase: {
+    PostgrestVersion: "12";
+  };
+
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string;
+          role: UserRole;
+          phone: string | null;
+          avatar_url: string | null;
+          stripe_customer_id: string | null;
+          hubspot_contact_id: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          full_name: string;
+          role: UserRole;
+          phone?: string | null;
+          avatar_url?: string | null;
+          stripe_customer_id?: string | null;
+          hubspot_contact_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          full_name?: string;
+          role?: UserRole;
+          phone?: string | null;
+          avatar_url?: string | null;
+          stripe_customer_id?: string | null;
+          hubspot_contact_id?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      vehicles: {
+        Row: {
+          id: string;
+          user_id: string;
+          make: string;
+          model: string;
+          year: number;
+          /** One of the 19 Super Dispatch enum values — enforced at DB level */
+          vehicle_type: string;
+          color: string | null;
+          vin: string | null;
+          license_plate: string | null;
+          is_inoperable: boolean;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          make: string;
+          model: string;
+          year: number;
+          vehicle_type: string;
+          color?: string | null;
+          vin?: string | null;
+          license_plate?: string | null;
+          is_inoperable?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          make?: string;
+          model?: string;
+          year?: number;
+          vehicle_type?: string;
+          color?: string | null;
+          vin?: string | null;
+          license_plate?: string | null;
+          is_inoperable?: boolean;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      shipments: {
+        Row: {
+          id: string;
+          /** UUID generated by portal — links portal (Supabase) to automation (n8n/HubSpot) */
+          order_guid: string;
+          user_id: string;
+          vehicle_id: string;
+          booking_model: BookingModel;
+          service_tier: ServiceTier;
+          status: ShipmentStatus;
+          origin_address: string;
+          origin_city: string;
+          origin_state: string;
+          origin_zip: string;
+          destination_address: string;
+          destination_city: string;
+          destination_state: string;
+          destination_zip: string;
+          pickup_date: string | null;
+          delivery_date: string | null;
+          estimated_miles: number | null;
+          carrier_name: string | null;
+          carrier_id: string | null;
+          super_dispatch_order_id: string | null;
+          hubspot_deal_id: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_guid?: string;
+          user_id: string;
+          vehicle_id: string;
+          booking_model: BookingModel;
+          service_tier: ServiceTier;
+          status?: ShipmentStatus;
+          origin_address: string;
+          origin_city: string;
+          origin_state: string;
+          origin_zip: string;
+          destination_address: string;
+          destination_city: string;
+          destination_state: string;
+          destination_zip: string;
+          pickup_date?: string | null;
+          delivery_date?: string | null;
+          estimated_miles?: number | null;
+          carrier_name?: string | null;
+          carrier_id?: string | null;
+          super_dispatch_order_id?: string | null;
+          hubspot_deal_id?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          order_guid?: string;
+          user_id?: string;
+          vehicle_id?: string;
+          booking_model?: BookingModel;
+          service_tier?: ServiceTier;
+          status?: ShipmentStatus;
+          origin_address?: string;
+          origin_city?: string;
+          origin_state?: string;
+          origin_zip?: string;
+          destination_address?: string;
+          destination_city?: string;
+          destination_state?: string;
+          destination_zip?: string;
+          pickup_date?: string | null;
+          delivery_date?: string | null;
+          estimated_miles?: number | null;
+          carrier_name?: string | null;
+          carrier_id?: string | null;
+          super_dispatch_order_id?: string | null;
+          hubspot_deal_id?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shipments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shipments_vehicle_id_fkey";
+            columns: ["vehicle_id"];
+            isOneToOne: false;
+            referencedRelation: "vehicles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      quotes: {
+        Row: {
+          id: string;
+          shipment_id: string;
+          order_guid: string;
+          /** Carrier pay — raw from Super Dispatch Pricing Insights API */
+          carrier_pay: number | null;
+          /** calculatedShipperQuote = Math.round(carrier_pay / (1 - 0.20)) — JS computes, never LLM */
+          shipper_quote: number | null;
+          market_rate_low: number | null;
+          market_rate_high: number | null;
+          estimated_miles: number | null;
+          currency: string;
+          status: QuoteStatus;
+          expires_at: string | null;
+          /** Path A/B/C from quote engine — MANUAL_REVIEW_REQUIRED / PRICING_API_FAILED / AUTO */
+          quote_path: string | null;
+          sd_counter_offer_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shipment_id: string;
+          order_guid: string;
+          carrier_pay?: number | null;
+          shipper_quote?: number | null;
+          market_rate_low?: number | null;
+          market_rate_high?: number | null;
+          estimated_miles?: number | null;
+          currency?: string;
+          status?: QuoteStatus;
+          expires_at?: string | null;
+          quote_path?: string | null;
+          sd_counter_offer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          shipment_id?: string;
+          order_guid?: string;
+          carrier_pay?: number | null;
+          shipper_quote?: number | null;
+          market_rate_low?: number | null;
+          market_rate_high?: number | null;
+          estimated_miles?: number | null;
+          currency?: string;
+          status?: QuoteStatus;
+          expires_at?: string | null;
+          quote_path?: string | null;
+          sd_counter_offer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "quotes_shipment_id_fkey";
+            columns: ["shipment_id"];
+            isOneToOne: false;
+            referencedRelation: "shipments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      payments: {
+        Row: {
+          id: string;
+          shipment_id: string;
+          stripe_payment_intent_id: string | null;
+          stripe_event_id: string | null;
+          amount_cents: number;
+          currency: string;
+          status: PaymentStatus;
+          /** Military discount — Stripe coupon code, NOT a separate booking flow */
+          coupon_code: string | null;
+          zelle_confirmed_by: string | null;
+          zelle_confirmed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shipment_id: string;
+          stripe_payment_intent_id?: string | null;
+          stripe_event_id?: string | null;
+          amount_cents: number;
+          currency?: string;
+          status?: PaymentStatus;
+          coupon_code?: string | null;
+          zelle_confirmed_by?: string | null;
+          zelle_confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          shipment_id?: string;
+          stripe_payment_intent_id?: string | null;
+          stripe_event_id?: string | null;
+          amount_cents?: number;
+          currency?: string;
+          status?: PaymentStatus;
+          coupon_code?: string | null;
+          zelle_confirmed_by?: string | null;
+          zelle_confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_shipment_id_fkey";
+            columns: ["shipment_id"];
+            isOneToOne: false;
+            referencedRelation: "shipments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      /**
+       * Stripe idempotency table — prevents double-invoice on webhook retry.
+       * unique(stripe_event_id) enforced at DB level.
+       */
+      processed_webhooks: {
+        Row: {
+          id: string;
+          stripe_event_id: string;
+          event_type: string;
+          processed_at: string;
+        };
+        Insert: {
+          id?: string;
+          stripe_event_id: string;
+          event_type: string;
+          processed_at?: string;
+        };
+        Update: {
+          id?: string;
+          stripe_event_id?: string;
+          event_type?: string;
+          processed_at?: string;
+        };
+        Relationships: [];
+      };
+
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          shipment_id: string | null;
+          channel: NotifChannel;
+          subject: string | null;
+          body: string;
+          is_read: boolean;
+          sent_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          shipment_id?: string | null;
+          channel: NotifChannel;
+          subject?: string | null;
+          body: string;
+          is_read?: boolean;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          shipment_id?: string | null;
+          channel?: NotifChannel;
+          subject?: string | null;
+          body?: string;
+          is_read?: boolean;
+          sent_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      audit_log: {
+        Row: {
+          id: string;
+          shipment_id: string | null;
+          user_id: string | null;
+          action: AuditAction;
+          payload: Json | null;
+          hubspot_synced: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          shipment_id?: string | null;
+          user_id?: string | null;
+          action: AuditAction;
+          payload?: Json | null;
+          hubspot_synced?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          shipment_id?: string | null;
+          user_id?: string | null;
+          action?: AuditAction;
+          payload?: Json | null;
+          hubspot_synced?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+
+      referral_credits: {
+        Row: {
+          id: string;
+          referrer_id: string;
+          referred_id: string;
+          credit_cents: number;
+          redeemed: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          referrer_id: string;
+          referred_id: string;
+          credit_cents?: number;
+          redeemed?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          referrer_id?: string;
+          referred_id?: string;
+          credit_cents?: number;
+          redeemed?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "referral_credits_referrer_id_fkey";
+            columns: ["referrer_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      carrier_bids: {
+        Row: {
+          id: string;
+          shipment_id: string;
+          carrier_id: string;
+          carrier_name: string;
+          bid_amount_cents: number;
+          insurance_amount_cents: number | null;
+          eta_days: number | null;
+          status: "pending" | "accepted" | "rejected";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shipment_id: string;
+          carrier_id: string;
+          carrier_name: string;
+          bid_amount_cents: number;
+          insurance_amount_cents?: number | null;
+          eta_days?: number | null;
+          status?: "pending" | "accepted" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          shipment_id?: string;
+          carrier_id?: string;
+          carrier_name?: string;
+          bid_amount_cents?: number;
+          insurance_amount_cents?: number | null;
+          eta_days?: number | null;
+          status?: "pending" | "accepted" | "rejected";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "carrier_bids_shipment_id_fkey";
+            columns: ["shipment_id"];
+            isOneToOne: false;
+            referencedRelation: "shipments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+    };
+
+    Views: {
+      /**
+       * Read-only view — security_invoker = true applied in schema.sql so RLS
+       * is enforced through the view (Postgres 15+ default bypass is patched).
+       */
+      shipment_status_overview: {
+        Row: {
+          id: string | null;
+          order_guid: string | null;
+          status: ShipmentStatus | null;
+          service_tier: ServiceTier | null;
+          booking_model: BookingModel | null;
+          user_id: string | null;
+          origin_city: string | null;
+          destination_city: string | null;
+          carrier_name: string | null;
+          created_at: string | null;
+        };
+        Relationships: [];
+      };
+    };
+
+    /**
+     * No Postgres functions exposed via PostgREST in MVP.
+     * Empty object satisfies Record<string, GenericFunction> constraint.
+     */
+    Functions: Record<string, never>;
+
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+}
