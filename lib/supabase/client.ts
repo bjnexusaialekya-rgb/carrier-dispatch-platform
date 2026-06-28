@@ -1,13 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient as createSSRBrowserClient } from "@supabase/ssr";
 import type { Database } from "./types";
-
-/**
- * Browser-side Supabase client.
- * Uses NEXT_PUBLIC_ env var — sb_publishable_xxx key format.
- * NEVER pass SUPABASE_SECRET_KEY here — that is server-side only.
- *
- * Use this in Client Components only.
- */
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -19,4 +11,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const createBrowserClient = () =>
-  createClient<Database>(supabaseUrl, supabaseAnonKey);
+  createSSRBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
