@@ -25,13 +25,14 @@ export async function requireAuth() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("users")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  if (!profile) {
+  if (profileError || !profile) {
+    console.error("PROFILE FAIL:", profileError?.message, "userId:", user?.id);
     redirect("/login");
   }
 
