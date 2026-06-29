@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ROLE_DASHBOARD_ROUTE, type UserRole } from "@/lib/types/roles";
 
@@ -8,6 +9,9 @@ import { ROLE_DASHBOARD_ROUTE, type UserRole } from "@/lib/types/roles";
  * Call this at the top of every protected Server Component.
  */
 export async function requireAuth() {
+  const h = await headers();
+  // Force dynamic — prevent Vercel caching this response
+  const _ = h.get("x-forwarded-for");
   const cookieStore = await (await import("next/headers")).cookies();
   console.log("requireAuth cookies:", cookieStore.getAll().map(c => c.name));
   const supabase = await createServerSupabaseClient();
