@@ -28,10 +28,6 @@ export default function LoginPage() {
       const result = await loginWithEmailPassword(email, password);
       if (result?.error) {
         setError(result.error);
-      } else if (result?.success) {
-        router.refresh();
-        setTimeout(() => router.push('/'), 50);
-      }
     } else {
       const { error } = await supabase.auth.signUp({
         email,
