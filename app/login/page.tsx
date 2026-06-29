@@ -28,6 +28,7 @@ export default function LoginPage() {
       const result = await loginWithEmailPassword(email, password);
       if (result?.error) {
         setError(result.error);
+      }
     } else {
       const { error } = await supabase.auth.signUp({
         email,
