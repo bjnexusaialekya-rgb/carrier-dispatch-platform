@@ -22,7 +22,7 @@ export async function requireAuth() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    throw new Error("Profile missing for user: " + user?.id);
+    redirect("/login");
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -33,7 +33,7 @@ export async function requireAuth() {
 
   if (profileError || !profile) {
     console.error("PROFILE FAIL: userId:", user?.id);
-    throw new Error("Profile missing for user: " + user?.id);
+    redirect("/login");
   }
 
   return { user, profile, supabase };
