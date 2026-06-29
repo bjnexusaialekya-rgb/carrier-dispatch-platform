@@ -1,4 +1,5 @@
 import { requireAuth } from "@/lib/auth/session";
+import { logout } from "@/app/actions/logout";
 import { ROLE_LABELS, type UserRole } from "@/lib/types/roles";
 
 export default async function DashboardLayout({
@@ -51,6 +52,9 @@ export default async function DashboardLayout({
           <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
             {ROLE_LABELS[profile.role as UserRole]} · {profile.full_name}
           </span>
+          <form action={logout}>
+            <button type="submit" style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", background: "none", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", padding: "0.25rem 0.75rem", cursor: "pointer" }}>Logout</button>
+          </form>
         </div>
       </nav>
       <main style={{ padding: "2rem 1.5rem" }}>{children}</main>
