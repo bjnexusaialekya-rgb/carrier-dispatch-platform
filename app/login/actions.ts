@@ -2,6 +2,7 @@
 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 
 export async function loginWithEmailPassword(email: string, password: string) {
@@ -32,5 +33,5 @@ export async function loginWithEmailPassword(email: string, password: string) {
     return { error: error.message }
   }
 
-  return { success: true }
+  redirect('/')
 }
