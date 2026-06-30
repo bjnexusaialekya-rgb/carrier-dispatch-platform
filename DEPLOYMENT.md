@@ -1,4 +1,4 @@
-# DEPLOYMENT GUIDE — Bigfella Auto Express Portal
+# DEPLOYMENT GUIDE — Carrier Dispatch Express Portal
 
 Built by BJNEXUS AI · Next.js 16.2.6 + Supabase + Stripe
 

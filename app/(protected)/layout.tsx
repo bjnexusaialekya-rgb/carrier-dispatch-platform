@@ -37,7 +37,7 @@ export default async function DashboardLayout({
         }}
       >
         <span style={{ fontWeight: 700, fontSize: "1rem", color: "var(--color-brand-700)" }}>
-          Bigfella Auto Express
+          Carrier Dispatch Express
         </span>
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           {navLinks.map((link) => (

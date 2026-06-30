@@ -1,5 +1,5 @@
 /**
- * Six user role types for Bigfella Auto Express portal.
+ * Six user role types for Carrier Dispatch Express portal.
  * Based on Job 3 post language — athletes, agents, managers, dealerships, retail customers.
  */
 export const USER_ROLES = [

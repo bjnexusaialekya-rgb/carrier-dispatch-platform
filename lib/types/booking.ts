@@ -2,7 +2,7 @@ export const BOOKING_MODELS = ["full_service", "marketplace"] as const;
 export type BookingModel = (typeof BOOKING_MODELS)[number];
 
 export const BOOKING_MODEL_LABELS: Record<BookingModel, string> = {
-  full_service: "Full Service (Bigfella Manages Everything)",
+  full_service: "Full Service (We Manage Everything)",
   marketplace: "Carrier Marketplace (You Choose Your Carrier)",
 };
 

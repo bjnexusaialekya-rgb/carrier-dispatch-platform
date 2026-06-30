@@ -1,5 +1,5 @@
 -- ============================================================
--- Bigfella Auto Express — Supabase Schema
+-- Carrier Dispatch Express — Supabase Schema
 -- Three-step rule: CREATE → ENABLE RLS → GRANT (on every table)
 -- GRANT required: tables invisible without it after Oct 30 2026
 -- (select auth.uid()) not auth.uid() — prevents performance death
