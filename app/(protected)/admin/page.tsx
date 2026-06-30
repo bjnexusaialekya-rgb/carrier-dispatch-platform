@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
 import { SHIPMENT_STATUS_LABELS, type ShipmentStatus } from "@/lib/types/booking";
+import ApproveRejectButtons from "./ApproveRejectButtons";
 
 export default async function AdminDashboard() {
   const { supabase } = await requireRole("admin");
@@ -68,7 +69,7 @@ export default async function AdminDashboard() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--color-border)", background: "var(--color-surface-muted)" }}>
-                  {["Client", "Vehicle", "Route", "Status", "Carrier"].map((h) => (
+                  {["Client", "Vehicle", "Route", "Status", "Carrier", "Action"].map((h) => (
                     <th key={h} style={{ padding: "0.625rem 0.75rem", textAlign: "left", fontWeight: 600, color: "var(--color-text-muted)", fontSize: "0.7rem" }}>
                       {h}
                     </th>
@@ -98,6 +99,13 @@ export default async function AdminDashboard() {
                       </td>
                       <td style={{ padding: "0.625rem 0.75rem", color: "var(--color-text-muted)" }}>
                         {s.carrier_name ?? "Unassigned"}
+                      </td>
+                      <td style={{ padding: "0.625rem 0.75rem" }}>
+                        {s.status === "pending" || s.status === "quoted" ? (
+                          <ApproveRejectButtons shipmentId={s.id} orderGuid={s.order_guid} />
+                        ) : (
+                          <span style={{ color: "var(--color-text-muted)", fontSize: "0.7rem" }}>—</span>
+                        )}
                       </td>
                     </tr>
                   );
