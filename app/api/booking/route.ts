@@ -1,17 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { calculateQuote } from "@/lib/quotes/calculate-quote";
+import type { VehicleType } from "@/lib/types/vehicle";
+import type { ServiceTier, BookingModel } from "@/lib/types/booking";
 
-/**
- * POST /api/booking
- * Called after shipment is inserted into Supabase.
- * Fires the n8n webhook with order_guid so automation engine can begin.
- *
- * order_guid is the critical link between:
- *   - Supabase (portal)
- *   - n8n automation engine
- *   - HubSpot CRM deal
- * Agreed on day one — never remove this field from the payload.
- */
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
 
@@ -27,7 +19,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "shipmentId required" }, { status: 400 });
   }
 
-  // Fetch the shipment — RLS ensures this user owns it
   const { data: shipment, error: fetchError } = await supabase
     .from("shipments")
     .select("*, vehicles(*)")
@@ -39,21 +30,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Shipment not found" }, { status: 404 });
   }
 
-  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-  if (!n8nWebhookUrl) {
-    // Webhook not configured — shipment still saved, automation skipped
-    console.warn("N8N_WEBHOOK_URL not set — skipping automation trigger");
-    return NextResponse.json({ ok: true, automation: "skipped" });
-  }
-
   const vehicle = shipment.vehicles as {
     make: string; model: string; year: number;
-    vehicle_type: string; is_inoperable: boolean;
+    vehicle_type: VehicleType; is_inoperable: boolean;
   } | null;
 
-  // Payload matches n8n node-001 SD Webhook Listener expectations
+  const quoteResult = await calculateQuote({
+    originZip: shipment.origin_zip,
+    destinationZip: shipment.destination_zip,
+    vehicleType: vehicle?.vehicle_type ?? "sedan",
+    serviceTier: shipment.service_tier as ServiceTier,
+    bookingModel: shipment.booking_model as BookingModel,
+    isInoperable: vehicle?.is_inoperable ?? false,
+  });
+
+  const { error: quoteInsertError } = await supabase.from("quotes").insert({
+    shipment_id: shipment.id,
+    order_guid: shipment.order_guid,
+    carrier_pay: null,
+    shipper_quote: quoteResult.shipperQuote,
+    market_rate_low: quoteResult.marketRateLow,
+    market_rate_high: quoteResult.marketRateHigh,
+    estimated_miles: quoteResult.miles,
+    quote_path: quoteResult.path,
+    status: "pending",
+  });
+
+  if (quoteInsertError) {
+    console.error("Quote insert failed:", quoteInsertError.message);
+  }
+
+  if (quoteResult.path === "AUTO") {
+    await supabase
+      .from("shipments")
+      .update({ status: "quoted", estimated_miles: quoteResult.miles })
+      .eq("id", shipment.id);
+  }
+
+  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+  if (!n8nWebhookUrl) {
+    console.warn("N8N_WEBHOOK_URL not set — skipping automation trigger");
+    return NextResponse.json({ ok: true, automation: "skipped", quote: quoteResult.path });
+  }
+
   const webhookPayload = {
-    order_guid: shipment.order_guid,          // Critical link — never remove
+    order_guid: shipment.order_guid,
     shipment_id: shipment.id,
     user_id: user.id,
     booking_model: shipment.booking_model,
@@ -69,17 +90,17 @@ export async function POST(request: NextRequest) {
       make: vehicle.make,
       model: vehicle.model,
       year: vehicle.year,
-      // vehicle_type is validated against SD 19 enum at DB level
-      // "car" would have been rejected by CHECK constraint before reaching here
       vehicle_type: vehicle.vehicle_type,
       is_inoperable: vehicle.is_inoperable,
     } : null,
     notes: shipment.notes,
+    quote: {
+      shipper_quote: quoteResult.shipperQuote,
+      estimated_miles: quoteResult.miles,
+    },
   };
 
   try {
-    // n8n webhook must respond within 10 seconds (SD spec)
-    // node-002 returns 200 OK instantly — we mirror that pattern here
     const n8nResponse = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,13 +110,17 @@ export async function POST(request: NextRequest) {
 
     if (!n8nResponse.ok) {
       console.error("n8n webhook failed:", n8nResponse.status);
-      // Don't fail the user — shipment is saved, automation will retry
-      return NextResponse.json({ ok: true, automation: "webhook_failed" });
+      return NextResponse.json({ ok: true, automation: "webhook_failed", quote: quoteResult.path });
     }
 
-    return NextResponse.json({ ok: true, automation: "triggered", order_guid: shipment.order_guid });
+    return NextResponse.json({
+      ok: true,
+      automation: "triggered",
+      order_guid: shipment.order_guid,
+      quote: quoteResult.path,
+    });
   } catch (err) {
     console.error("n8n webhook error:", err);
-    return NextResponse.json({ ok: true, automation: "error" });
+    return NextResponse.json({ ok: true, automation: "error", quote: quoteResult.path });
   }
 }

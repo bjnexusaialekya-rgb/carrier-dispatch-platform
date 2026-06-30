@@ -137,9 +137,23 @@ export default async function QuotePage({
               </p>
               {quote.market_rate_low && quote.market_rate_high && (
                 <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
-                  Market range: ${Number(quote.market_rate_low).toLocaleString()} – ${Number(quote.market_rate_high).toLocaleString()}
+                  Estimated range: ${Number(quote.market_rate_low).toLocaleString()} – ${Number(quote.market_rate_high).toLocaleString()}
                 </p>
               )}
+              <div style={{
+                marginTop: "0.875rem",
+                padding: "0.625rem 0.75rem",
+                background: "var(--color-status-pending)11",
+                border: "1px solid var(--color-status-pending)33",
+                borderRadius: "var(--radius-md)",
+              }}>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", lineHeight: 1.5 }}>
+                  <strong style={{ color: "var(--color-text)" }}>Estimate only.</strong> This price is
+                  based on route distance and current rate guidelines. Your final price is confirmed
+                  once a carrier is assigned and may vary based on live carrier availability, fuel
+                  costs, and seasonal demand.
+                </p>
+              </div>
             </div>
           ) : (
             <p style={{ fontSize: "0.875rem", color: "var(--color-text-muted)" }}>Quote being calculated…</p>

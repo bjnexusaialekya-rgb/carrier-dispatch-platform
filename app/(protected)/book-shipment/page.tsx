@@ -66,29 +66,44 @@ export default function BookShipmentPage() {
       return;
     }
 
-    const { error: insertError } = await supabase.from("shipments").insert({
-      user_id: user.id,
-      vehicle_id: selectedVehicleId,
-      booking_model: bookingModel,
-      service_tier: serviceTier,
-      origin_address: "",
-      origin_city: originCity,
-      origin_state: originState,
-      origin_zip: originZip,
-      destination_address: "",
-      destination_city: destinationCity,
-      destination_state: destinationState,
-      destination_zip: destinationZip,
-      pickup_date: pickupDate || null,
-      notes: notes || null,
-    });
+    const { data: inserted, error: insertError } = await supabase
+      .from("shipments")
+      .insert({
+        user_id: user.id,
+        vehicle_id: selectedVehicleId,
+        booking_model: bookingModel,
+        service_tier: serviceTier,
+        origin_address: "",
+        origin_city: originCity,
+        origin_state: originState,
+        origin_zip: originZip,
+        destination_address: "",
+        destination_city: destinationCity,
+        destination_state: destinationState,
+        destination_zip: destinationZip,
+        pickup_date: pickupDate || null,
+        notes: notes || null,
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      window.location.href = "/athlete";
+    if (insertError || !inserted) {
+      setError(insertError?.message ?? "Could not create shipment.");
+      setLoading(false);
+      return;
     }
 
+    try {
+      await fetch("/api/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shipmentId: inserted.id }),
+      });
+    } catch {
+      // non-fatal
+    }
+
+    window.location.href = `/quotes/${inserted.id}`;
     setLoading(false);
   }
 
